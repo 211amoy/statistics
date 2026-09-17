@@ -1,79 +1,63 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"></script>
-<script>LA.init({id:"3RELbj09JN6pbH1K",ck:"3RELbj09JN6pbH1K"})</script>
-  <meta charset="UTF-8" />
-  <!-- 移动端适配，微信浏览器必备 -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-  <title>微信付款</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      background: #f5f5f5;
-      font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-      padding: 40px 16px;
-    }
-    .card{
-      background:#fff;
-      max-width:640px;
-      margin:0 auto;
-      border-radius:20px;
-      padding:30px 20px;
-      text-align:center;
-    }
-    .title{
-      font-size:20px;
-      color:#222;
-      margin-bottom:12px;
-    }
-    .desc{
-      color:#666;
-      font-size:15px;
-      line-height:1.6;
-      margin-bottom:24px;
-    }
-    .qrcode-box img{
-      width:440px;
-      height:640px;
-    }
-    .tip-red{
-      margin-top:20px;
-      font-size:13px;
-      color:#e64340;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>长按识别二维码</title>
+<!-- 引入jsQR二维码解析库 -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<style>
+.qr-img{
+  width:240px;
+  cursor:pointer;
+}
+</style>
 </head>
 <body>
-<div class="card">
-  <div class="title">微信收款</div>
-  <div class="desc">长按下方二维码图片<br>识别即可付款</div>
-  <div class="qrcode-box">
-    <!-- 替换为你的微信收款码图片地址，本地/CDN均可 -->
-    <img src="./wechat-pay.jpg" alt="微信收款码">
-  </div>
-  <div class="tip-red">⚠️当面付款，请勿转发给他人</div>
-</div>
 
-<!-- ========== 百度统计JS 放在这里 ========== -->
-<!--
-  1. 去百度统计（tongji.baidu.com）注册账号，新增网站（你的域名）
-  2. 获取官方js代码，替换下面这整段注释内容
-  示例模板（你要替换成自己的）
+<!-- 你的二维码图片 -->
+<img id="qrImage" class="qr-img" src="wechat-pay.jpg" alt="二维码">
+
 <script>
-var _hmt = _hmt || [];
-(function() {
-  var hm = document.createElement("script");
-  hm.src = "https://hm.baidu.com/hm.js?xxxxxxxxxxxx";
-  var s = document.getElementsByTagName("script")[0]; 
-  s.parentNode.insertBefore(hm, s);
-})();
-</script>
--->
+const imgEl = document.getElementById('qrImage');
 
+// 长按定时器
+let longPressTimer = null;
+const LONG_PRESS_TIME = 500; // 长按500ms触发
+
+imgEl.addEventListener('touchstart', function(e) {
+  longPressTimer = setTimeout(()=>{
+    scanQR(this);
+  }, LONG_PRESS_TIME);
+});
+imgEl.addEventListener('touchend', ()=>{
+  clearTimeout(longPressTimer);
+});
+imgEl.addEventListener('touchcancel', ()=>{
+  clearTimeout(longPressTimer);
+});
+
+// 二维码解析函数
+async function scanQR(img) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  ctx.drawImage(img,0,0);
+  const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+  const code = jsQR(imageData.data, canvas.width, canvas.height);
+
+  if(code){
+    const result = code.data;
+    if(confirm(`识别到二维码：\n${result}\n是否打开链接？`)){
+      window.location.href = result;
+    }
+  }else{
+    alert("未识别到二维码");
+  }
+}
+</script>
+
+<!-- 51LA统计代码放这里 -->
 </body>
 </html>
